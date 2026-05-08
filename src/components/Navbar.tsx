@@ -13,9 +13,17 @@ export function Navbar() {
             Today in <span className="text-[#0070f3]">History</span>
           </span>
         </Link>
-        <span className="text-sm font-medium text-white/40">
-          {new Date().toLocaleDateString("en-US", { weekday: "long" })}
-        </span>
+        <div className="flex items-center gap-6">
+          <Link 
+            href="/feedback" 
+            className="text-sm font-medium text-white/60 hover:text-[#0070f3] transition-colors"
+          >
+            Feedback
+          </Link>
+          <span className="text-sm font-medium text-white/40">
+            {new Date().toLocaleDateString("en-US", { weekday: "long" })}
+          </span>
+        </div>
       </div>
     </nav>
   );

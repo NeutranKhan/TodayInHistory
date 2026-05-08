@@ -7,4 +7,16 @@ export interface HistoryEvent {
   impactSummary: string;
   imageURL?: string;
   createdAt: number;
+  totalRating?: number;
+  ratingCount?: number;
+}
+
+export interface FeedbackSubmission {
+  id?: string;
+  name: string;
+  email: string;
+  type: string;
+  message: string;
+  rating: number;
+  createdAt: any; // Firestore Timestamp
 }
