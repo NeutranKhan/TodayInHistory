@@ -366,7 +366,9 @@ export default function NewsroomPage() {
                     </div>
                     <div className="text-[10px] text-[#444] font-medium flex items-center gap-1.5 uppercase tracking-widest">
                       <CalendarIcon className="w-3 h-3" />
-                      {sub.createdAt?.toDate?.() ? sub.createdAt.toDate().toLocaleString() : "Recently"}
+                      {sub.createdAt && typeof sub.createdAt === "object" && "toDate" in sub.createdAt
+                        ? (sub.createdAt as { toDate: () => Date }).toDate().toLocaleString()
+                        : "Recently"}
                     </div>
                   </div>
                 ))}
