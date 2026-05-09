@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, Fragment } from "react";
 import {
   collection,
   query,
@@ -25,6 +25,14 @@ function getTodayMonthDay(): string {
   return `${month}-${day}`;
 }
 
+function getYesterdayMonthDay(): string {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const month = String(yesterday.getMonth() + 1).padStart(2, "0");
+  const day = String(yesterday.getDate()).padStart(2, "0");
+  return `${month}-${day}`;
+}
+
 function formatDateDisplay(monthDay: string): string {
   const [month, day] = monthDay.split("-");
   const date = new Date(2000, parseInt(month) - 1, parseInt(day));
@@ -40,6 +48,9 @@ export default function HomePage() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const todayMonthDay = getTodayMonthDay();
+  const yesterdayMonthDay = getYesterdayMonthDay();
+
+  let currentMonthDay = "";
 
   const fetchEvents = useCallback(
     async (isLoadMore = false) => {
@@ -178,16 +189,35 @@ export default function HomePage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {events.map((event, index) => (
-              <div
-                key={event.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <HistoryCard event={event} />
-              </div>
-            ))}
+          <div className="space-y-12">
+            {events.map((event, index) => {
+              const isNewDate = event.monthDay !== currentMonthDay;
+              currentMonthDay = event.monthDay;
+
+              return (
+                <Fragment key={event.id}>
+                  {isNewDate && (
+                    <div className="relative py-4 flex items-center gap-4">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#1a1a1a]" />
+                      <div className="px-6 py-2 rounded-full bg-[#0a0a0a] border border-[#1a1a1a] text-xs font-black uppercase tracking-[0.2em] text-[#0070f3] shadow-[0_0_15px_rgba(0,112,243,0.1)]">
+                        {event.monthDay === todayMonthDay
+                          ? "Today in History"
+                          : event.monthDay === yesterdayMonthDay
+                          ? "Yesterday in History"
+                          : `${formatDateDisplay(event.monthDay)} in History`}
+                      </div>
+                      <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#1a1a1a]" />
+                    </div>
+                  )}
+                  <div
+                    className="animate-fade-in-up"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <HistoryCard event={event} />
+                  </div>
+                </Fragment>
+              );
+            })}
           </div>
         )}
 

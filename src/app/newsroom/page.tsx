@@ -18,6 +18,8 @@ import {
   Star,
   Users,
   Calendar as CalendarIcon,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { HistoryEvent, FeedbackSubmission } from "@/../types";
 
@@ -103,6 +105,8 @@ export default function NewsroomPage() {
         createdAt: Date.now(),
         totalRating: 0,
         ratingCount: 0,
+        likes: 0,
+        dislikes: 0,
       });
 
       setSuccess(true);
@@ -395,6 +399,8 @@ export default function NewsroomPage() {
                         <th className="px-6 py-4 text-xs font-bold text-[#444] uppercase tracking-widest">Event</th>
                         <th className="px-6 py-4 text-xs font-bold text-[#444] uppercase tracking-widest text-center">Avg Rating</th>
                         <th className="px-6 py-4 text-xs font-bold text-[#444] uppercase tracking-widest text-center">Votes</th>
+                        <th className="px-6 py-4 text-xs font-bold text-[#444] uppercase tracking-widest text-center">Likes</th>
+                        <th className="px-6 py-4 text-xs font-bold text-[#444] uppercase tracking-widest text-center">Dislikes</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -416,6 +422,18 @@ export default function NewsroomPage() {
                               <div className="flex items-center justify-center gap-1.5 text-[#a0a0a0]">
                                 <Users className="w-3.5 h-3.5" />
                                 <span className="text-sm font-medium">{event.ratingCount || 0}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <div className="flex items-center justify-center gap-1.5 text-green-500/60 font-bold">
+                                <ThumbsUp className="w-3.5 h-3.5" />
+                                <span className="text-sm">{event.likes || 0}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <div className="flex items-center justify-center gap-1.5 text-red-500/60 font-bold">
+                                <ThumbsDown className="w-3.5 h-3.5" />
+                                <span className="text-sm">{event.dislikes || 0}</span>
                               </div>
                             </td>
                           </tr>

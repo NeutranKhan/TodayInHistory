@@ -9,6 +9,8 @@ export interface HistoryEvent {
   createdAt: number;
   totalRating?: number;
   ratingCount?: number;
+  likes?: number;
+  dislikes?: number;
 }
 
 export interface FeedbackSubmission {
@@ -18,5 +20,5 @@ export interface FeedbackSubmission {
   type: string;
   message: string;
   rating: number;
-  createdAt: any; // Firestore Timestamp
+  createdAt: unknown; // Firestore Timestamp
 }

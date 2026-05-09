@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HistoryEvent } from "@/../types";
 import { cn } from "@/lib/utils";
-import { Star, Users } from "lucide-react";
+import { Star, Users, ThumbsUp, ThumbsDown } from "lucide-react";
 import { doc, updateDoc, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -17,6 +17,9 @@ export function HistoryCard({ event }: HistoryCardProps) {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isRating, setIsRating] = useState(false);
   const [hasRated, setHasRated] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [hasDisliked, setHasDisliked] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
 
   // Stats
   const totalRating = event.totalRating || 0;
@@ -27,6 +30,14 @@ export function HistoryCard({ event }: HistoryCardProps) {
     const ratedEvents = JSON.parse(localStorage.getItem("rated_events") || "[]");
     if (ratedEvents.includes(event.id)) {
       setHasRated(true);
+    }
+    const likedEvents = JSON.parse(localStorage.getItem("liked_events") || "[]");
+    if (likedEvents.includes(event.id)) {
+      setHasLiked(true);
+    }
+    const dislikedEvents = JSON.parse(localStorage.getItem("disliked_events") || "[]");
+    if (dislikedEvents.includes(event.id)) {
+      setHasDisliked(true);
     }
   }, [event.id]);
 
@@ -51,6 +62,30 @@ export function HistoryCard({ event }: HistoryCardProps) {
       setUserRating(null);
     } finally {
       setIsRating(false);
+    }
+  };
+
+  const handleVote = async (type: "like" | "dislike") => {
+    if (hasLiked || hasDisliked || isVoting || !event.id) return;
+
+    setIsVoting(true);
+    try {
+      const eventRef = doc(db, "events", event.id);
+      if (type === "like") {
+        await updateDoc(eventRef, { likes: increment(1) });
+        const likedEvents = JSON.parse(localStorage.getItem("liked_events") || "[]");
+        localStorage.setItem("liked_events", JSON.stringify([...likedEvents, event.id]));
+        setHasLiked(true);
+      } else {
+        await updateDoc(eventRef, { dislikes: increment(1) });
+        const dislikedEvents = JSON.parse(localStorage.getItem("disliked_events") || "[]");
+        localStorage.setItem("disliked_events", JSON.stringify([...dislikedEvents, event.id]));
+        setHasDisliked(true);
+      }
+    } catch (error) {
+      console.error("Error voting:", error);
+    } finally {
+      setIsVoting(false);
     }
   };
 
@@ -126,37 +161,85 @@ export function HistoryCard({ event }: HistoryCardProps) {
                 <span className="text-sm font-medium">{ratingCount}</span>
               </div>
             </div>
+            <div className="w-px h-10 bg-[#1a1a1a]" />
+            <div className="flex gap-4">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-[#444] uppercase tracking-widest mb-1">Likes</span>
+                <div className="flex items-center gap-1.5 text-green-500/80">
+                  <ThumbsUp className="w-4 h-4" />
+                  <span className="text-sm font-medium">{event.likes || 0}</span>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-[#444] uppercase tracking-widest mb-1">Dislikes</span>
+                <div className="flex items-center gap-1.5 text-red-500/80">
+                  <ThumbsDown className="w-4 h-4" />
+                  <span className="text-sm font-medium">{event.dislikes || 0}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col items-center sm:items-end">
-            <span className="text-xs font-bold text-[#444] uppercase tracking-widest mb-2">
-              {hasRated ? "Thank you for rating!" : "Rate this event"}
-            </span>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  disabled={hasRated || isRating}
-                  onMouseEnter={() => setHoveredRating(star)}
-                  onMouseLeave={() => setHoveredRating(null)}
-                  onClick={() => handleRate(star)}
-                  className={cn(
-                    "p-1.5 rounded-lg transition-all",
-                    !hasRated && !isRating && "hover:bg-[#0070f3]/10 active:scale-90"
-                  )}
-                >
-                  <Star
+          <div className="flex flex-col items-center sm:items-end gap-3">
+            <div className="flex gap-2">
+              <button
+                disabled={hasLiked || hasDisliked || isVoting}
+                onClick={() => handleVote("like")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl transition-all border",
+                  hasLiked 
+                    ? "bg-green-500/10 border-green-500/20 text-green-500" 
+                    : "bg-[#111] border-[#222] text-[#444] hover:text-green-500 hover:border-green-500/50"
+                )}
+              >
+                <ThumbsUp className={cn("w-4 h-4", hasLiked && "fill-current")} />
+                <span className="text-xs font-black uppercase tracking-wider">{hasLiked ? "Liked" : "Like"}</span>
+              </button>
+              <button
+                disabled={hasLiked || hasDisliked || isVoting}
+                onClick={() => handleVote("dislike")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl transition-all border",
+                  hasDisliked 
+                    ? "bg-red-500/10 border-red-500/20 text-red-500" 
+                    : "bg-[#111] border-[#222] text-[#444] hover:text-red-500 hover:border-red-500/50"
+                )}
+              >
+                <ThumbsDown className={cn("w-4 h-4", hasDisliked && "fill-current")} />
+                <span className="text-xs font-black uppercase tracking-wider">{hasDisliked ? "Disliked" : "Dislike"}</span>
+              </button>
+            </div>
+            
+            <div className="flex flex-col items-center sm:items-end">
+              <span className="text-[10px] font-bold text-[#222] uppercase tracking-[0.2em] mb-1">
+                {hasRated ? "Contribution Recorded" : "Rate Accuracy"}
+              </span>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    disabled={hasRated || isRating}
+                    onMouseEnter={() => setHoveredRating(star)}
+                    onMouseLeave={() => setHoveredRating(null)}
+                    onClick={() => handleRate(star)}
                     className={cn(
-                      "w-6 h-6 transition-colors",
-                      star <= (hoveredRating ?? userRating ?? 0)
-                        ? "fill-[#0070f3] text-[#0070f3]"
-                        : hasRated
-                        ? "text-[#1a1a1a]"
-                        : "text-[#333]"
+                      "p-1 rounded-lg transition-all",
+                      !hasRated && !isRating && "hover:bg-[#0070f3]/10 active:scale-90"
                     )}
-                  />
-                </button>
-              ))}
+                  >
+                    <Star
+                      className={cn(
+                        "w-5 h-5 transition-colors",
+                        star <= (hoveredRating ?? userRating ?? 0)
+                          ? "fill-[#0070f3] text-[#0070f3]"
+                          : hasRated
+                          ? "text-[#1a1a1a]"
+                          : "text-[#222]"
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
